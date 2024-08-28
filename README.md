@@ -2,7 +2,7 @@
 
 ## Introduction
 
-​	这是根据https://github.com/lxfhfut/Self-Supervised-Leaf-Segmentation修改后的代码，主要功能是分割出叶片，构建真值。modify_RGB_num164是叶片原始图像，modify_TRUTH_num164是与此相对应的真值。
+​	这是根据https://github.com/lxfhfut/Self-Supervised-Leaf-Segmentation 修改后的代码，主要功能是分割出叶片，构建真值。modify_RGB_num164是叶片原始图像，modify_TRUTH_num164是与此相对应的真值。
 
 ## Getting Started
 
