@@ -1,79 +1,60 @@
-# Self-supervised Leaf Segmentation Under Complex Lighting Conditions
+# Self-Supervised-Leaf-Segmentation
+
 ## Introduction
-This repository contains the code and datasets for [*Self-supervised Leaf Segmentation Under Complex Lighting Conditions*](https://www.sciencedirect.com/science/article/abs/pii/S0031320322005015). Intended for growth monitoring in a real-world smart greenhouse environment, this project leverages self-supervised learning for effective and generalizable leaf segmentation in images taken under artificial grow lights, without resorting to any annotated data. If you find this work helpful, please cite our paper:
-```
-@article{lin2022self,
-  title={Self-Supervised Leaf Segmentation under Complex Lighting Conditions},
-  author={Lin, Xufeng and Li, Chang-Tsun and Adams, Scott and Kouzani, Abbas and others},
-  journal={Pattern Recognition},
-  pages={109021},
-  year={2022},
-  publisher={Elsevier}
-}
-```
-## Datasets
-We use two datasets in our experiments: **Our Cannabis dataset** and the **CVPPP leaf segmentation challenge (LSC) dataset**. 
-These two datasets and the pretained color correction models can be downloaded <a href="https://drive.google.com/drive/folders/1tmaRUmdnDhyvnznOWD_S1sYkxb-g02MT?usp=sharing" target="_blank">here</a>. Put the downloaded 'pretrained' folder in the root directory of the source code (i.e., at the same level as folders 'imgs', 'exmaples' and 'output').
 
-Our Cannabis dataset contains 120 images captured under three different lighting conditions: "Natural", "Yellow", and "Purple", with 40 images obtained in each lighting condition. 
+​	这是根据https://github.com/lxfhfut/Self-Supervised-Leaf-Segmentation修改后的代码，主要功能是分割出叶片，构建真值。modify_RGB_num164是叶片原始图像，modify_TRUTH_num164是与此相对应的真值。
 
-Cannabis "Natural"             | Cannabis "Yellow"         | Cannabis "Purple"
-:-------------------------:|:-------------------------:|:-------------------------:
-<img src="examples/2021_07_03_01_rgb.png" height="200" width="200"/>  |  <img src="examples/2021_07_09_09_rgb.png" height="200" width="200"/>  |. <img src="examples/2021_07_11_07_rgb.png" height="200" width="200"/> 
+## Getting Started
 
-To simulate the "Yellow" and "Purple" lighting conditions for the CVPPP dataset, we generate the "Yellow" and "Purple" versions of each image by manipulating the hue value of each pixel. The original CVPPP LSC dataset is refered to as "Natural".
+### 一、分割叶片构建真值
 
-CVPPP LSC "Natural"             | CVPPP LSC "Yellow"         | CVPPP LSC "Purple"
-:-------------------------:|:-------------------------:|:-------------------------:
-<img src="examples/plant066_rgb.png" height="200" width="200"/>  |  <img src="examples/plant025_rgb.png" height="200" width="200"/>  |. <img src="examples/plant035_rgb.png" height="200" width="200"/> 
-## Instructions
-The code was only tested on Ubuntu 20.04 with an NVIDIA GeForce RTX 2080 Ti. To get started, make sure the dependencies are installed via Anaconda:
 ```
-# create and activate environment
-conda env create -f ssls.yml
-conda activate ssls
+python leaf_segmneter.py
 ```
-Once the environment has been activated, you should be able to run the below examples:
 
-1. If you want to segment the leaves in the image './imgs/2021_06_30_23_rgb.png', run 
-```
-python leaf_segmenter.py --input ./imgs/2021_06_30_23_rgb.png
-```
-The output will be saved in './output/result.jpg'. By default, the final leaf segmentation result will be stored as an image showing the results of self-supervised semantic segmentation, mean image, absolution greenness, relative greenness, and the final binary segmentation result. 
+其中修改的主要部分如下
 
-2. If you would like to generate a video showing all the intermediate results, run 
-```
-python leaf_segmenter.py --input ./imgs/2021_06_30_23_rgb.png --save_video
-``` 
-The resultant video will be saved in './output/result.mp4'. 
+```python
+# threshold = 0.4
+labels = measure.label(image_labels)
+mean_img = mean_image(rgb_image, labels)
+absolute_greenness, relative_greenness = cal_greenness(mean_img)
+greenness = np.multiply(relative_greenness, (absolute_greenness > args.at).astype(np.float64))
+thresholded = 255 * ((greenness > args.rt).astype("uint8"))
+relative_greenness_gray = copy.deepcopy(relative_greenness) #深拷贝
+relative_greenness[relative_greenness > threshold] = 1 #灰度图二值化
+relative_greenness[relative_greenness <= threshold] = 0 #灰度图二值化
+relative_greenness_color = np.expand_dims(relative_greenness, axis=-1).astype(np.uint8) # 扩展为三通道
+combine = rgb_image // 2 + relative_greenness_color // 2
+save_result_path = os.path.join(args.save_path, f'wtruth_{i}.png')
+save_result_img(save_result_path, rgb_image, labels, combine,absolute_greenness, relative_greenness_gray, thresholded)
 
-3. For images taken under unnatural lighting conditions, you might want to apply color correction before leaf segmentation. The pretrained color correction models for the subsets (A1, A2, A3 and A4) of the CVPPP LSC dataset and our Cannabis dataset have been provided in folder 'pretrained'. Use the parameter '--ccm'  to specify the color correction model path for color correction. For example, if you want to correct the color for './imgs/2021_06_30_20_rgb.png' before segmentation, run 
+cv2.imwrite(save_result_path, relative_greenness)
 ```
-python leaf_segmenter.py --input ./imgs/2021_06_30_20_rgb.png --ccm ./pretrained/Cannabis_ccm.pt
-```
-The color-corrected image will be saved in './output/color_corrected.jpg'. **For the best color correction performance, please specify the correct color correction model for a given image. **
 
-4. There are various parameters you can control to generate the desired results. For more information, please run 
-```
-python leaf_segmenter.py --help
-```
-## Results
-* ### Cannabis leaves
-<img src="examples/2021_06_30_04_result.gif" width="400"/> <img src="examples/2021_07_04_02_result.gif" width="400"/> 
-* ### Small-sized leaves in the CVPPP LSC dataset
-<img src="examples/plant042_result.gif" width="400"/> <img src="examples/plant0868_result.gif" width="400"/>
-* ### Medium-sized leaves in the CVPPP LSC dataset
-<img src="examples/plant0906_result.gif" width="400"/> <img src="examples/plant0946_result.gif" width="400"/>
-* ### Large-sized leaves in the CVPPP LSC dataset
-<img src="examples/plant030_result.gif" width="400"/> <img src="examples/plant158_result.gif" width="400"/>
-* ### Instance segmentation based on the binary leaf mask using distance map
-<img src="examples/instance_segmentation.png" width="800"/>
+### 二、检查彩色叶子图像与对应的二值图（叶子真值）能否重合
 
-## Acknowledgement
-Thanks to the following projects that form the backbone of this repository:
-* #### [**Fully Connected CRF**](https://github.com/lucasb-eyer/pydensecrf)
-* #### [**Convolutional CRF**](https://github.com/MarvinTeichmann/ConvCRF)
-* #### [**Image Colorization**](https://colab.research.google.com/github/smartgeometry-ucl/dl4g/blob/master/colorization.ipynb)
-* #### [**Image-to-Image Translation**](https://github.com/phillipi/pix2pix)
-* #### [**unsupervised-segmentationp**](https://github.com/kanezaki/pytorch-unsupervised-segmentation)
+我们在构建出原始图像的真值后后需要检查彩色叶子图像与对应的二值图（叶子真值）能否重合，人工观察将差异较大的删除，代码如下
+
+```python
+import cv2
+import glob
+import numpy as np
+
+path1 = r'/home/xplv/fenghao/Self-Supervised-Leaf-Segmentation/modify_Input_num164/img_*.jpg'
+files1 = glob.iglob(path1)
+sorted_files1 = sorted(files1)
+path2 = r'/home/xplv/fenghao/Self-Supervised-Leaf-Segmentation/modify_Output_num164/truth_*.png'
+files2 = glob.iglob(path2)
+sorted_files2 = sorted(files2)
+
+for i in range(0, 163):
+    print(sorted_files1[i])
+    print(sorted_files2[i])
+    img1 = cv2.imread(sorted_files1[i], -1)  # img1 is rgb image
+    img2 = cv2.imread(sorted_files2[i], -1) * 255  # img2 is grey image
+    img2 = np.expand_dims(img2, axis=-1).astype(np.uint8) # expand dim
+    combine = img1 // 2 + img2 // 2
+    cv2.imwrite(f'Output_163/combine_{i}.png', combine)
+```
 
