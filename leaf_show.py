@@ -46,7 +46,7 @@ def parse_args():
                         help='save intermediate results as video')
     parser.add_argument('--save_frame_interval', default=2, type=int,
                         help='save frame every save_frame_interval iterations')
-    parser.add_argument('--save_path', type=str, default="./Output_file2/")
+    parser.add_argument('--save_path', type=str, default="./Output_file/")
 
     parser.add_argument('--input', type=str, default=f'./Input_num99/img.jpg', help='input image path')
     args, _ = parser.parse_known_args()
@@ -155,13 +155,12 @@ if __name__ == "__main__":
             greenness = np.multiply(relative_greenness, (absolute_greenness > args.at).astype(np.float64))
             thresholded = 255 * ((greenness > args.rt).astype("uint8"))
             relative_greenness_gray = copy.deepcopy(relative_greenness) #深拷贝
-            relative_greenness[relative_greenness > 0.4] = 1 #灰度图二值化
+            relative_greenness[relative_greenness > 0.4] = 255 #灰度图二值化
             relative_greenness[relative_greenness <= 0.4] = 0 #灰度图二值化
             relative_greenness_color = np.expand_dims(relative_greenness, axis=-1).astype(np.uint8) # 扩展为三通道
             combine = rgb_image // 2 + relative_greenness_color // 2
-            save_result_path = os.path.join(args.save_path, f'wtruth_{i}.png')
-            # save_result_img(save_result_path, rgb_image, labels, combine,absolute_greenness, relative_greenness_gray, thresholded)
+            save_result_path = os.path.join(args.save_path, f'combine_{i}.png')
+            save_result_img(save_result_path, rgb_image, labels, combine, absolute_greenness, relative_greenness_gray, thresholded)
 
-            cv2.imwrite(save_result_path, relative_greenness)
 
         print('Result has been saved in {}'.format(save_result_path))

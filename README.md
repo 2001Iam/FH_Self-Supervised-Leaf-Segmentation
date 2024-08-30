@@ -27,12 +27,20 @@ relative_greenness[relative_greenness <= threshold] = 0 #灰度图二值化
 relative_greenness_color = np.expand_dims(relative_greenness, axis=-1).astype(np.uint8) # 扩展为三通道
 combine = rgb_image // 2 + relative_greenness_color // 2
 save_result_path = os.path.join(args.save_path, f'wtruth_{i}.png')
-save_result_img(save_result_path, rgb_image, labels, combine,absolute_greenness, relative_greenness_gray, thresholded)
+#save_result_img(save_result_path, rgb_image, labels, combine,absolute_greenness, relative_greenness_gray, thresholded)
 
 cv2.imwrite(save_result_path, relative_greenness)
 ```
 
-### 二、检查彩色叶子图像与对应的二值图（叶子真值）能否重合
+### 二、展示叶片分割重合度
+
+```
+python leaf_show.py
+```
+
+
+
+### 三、检查彩色叶子图像与对应的二值图（叶子真值）能否重合
 
 我们在构建出原始图像的真值后后需要检查彩色叶子图像与对应的二值图（叶子真值）能否重合，人工观察将差异较大的删除，代码如下
 

@@ -64,7 +64,7 @@ def crop_img_from_center(img, width=512):
         return img[y:y + height, x:x + width]
 
 
-def save_result_img(save_path, rgb_img, img_labels, mean_img, absolute_greenness, relative_greenness, thresholded):
+def save_result_img(save_path, rgb_img, img_labels, combine_img, absolute_greenness, relative_greenness, thresholded):
     fig = plt.figure(figsize=(15, 10))
     ax = fig.add_subplot(2, 3, 1)
     ax.set_title('Original image')
@@ -77,9 +77,9 @@ def save_result_img(save_path, rgb_img, img_labels, mean_img, absolute_greenness
     plt.imshow(img_labels)
 
     ax = fig.add_subplot(2, 3, 3)
-    ax.set_title('Mean image')
+    ax.set_title('Combine image')
     plt.axis('off')
-    plt.imshow(mean_img)
+    plt.imshow(combine_img)
 
     ax = fig.add_subplot(2, 3, 4)
     ax.set_title('Binary mask')
