@@ -37,7 +37,7 @@ cv2.imwrite(save_result_path, relative_greenness)
 ```
 python leaf_show.py
 ```
-
+![show](./images/show.png)
 
 
 ### 三、检查彩色叶子图像与对应的二值图（叶子真值）能否重合
